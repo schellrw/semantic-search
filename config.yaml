@@ -1,0 +1,39 @@
+# Semantic Search System Configuration - DEMO VERSION
+# ====================================================
+# This config uses demo-safe paths to avoid overwriting existing work
+
+# Data settings
+data_dir: "data"
+raw_data_dir: "data/raw"
+processed_data_dir: "data/processed"
+target_queries: 50
+target_rows: 500
+random_seed: 2025
+
+# Model settings
+model_name: "all-MiniLM-L6-v2"
+max_chars: 2000
+text_combination_strategy: "v1"  # v1 (original), v2 (metadata first), v3 (bullets first)
+
+# Embedding settings
+tfidf_max_features: 1000
+tfidf_ngram_range: [1, 2]
+
+# Vector database settings - DEMO SAFE NAMES
+vector_db_dir: "src/vector_databases"
+vector_db_name: "semantic_search_demo"  # Won't overwrite existing 'semantic_search'
+table_name: "products"
+
+# Search settings
+hybrid_alpha: 0.7    # Weight for semantic score (0.0 to 1.0)
+hybrid_beta: 0.3     # Weight for keyword score (0.0 to 1.0)
+keyword_threshold: 0.1
+keywords_type: "light"  # light, moderate, raw
+
+# Secondary ranking settings
+brand_boost: 0.1
+title_match_boost: 0.05
+min_title_overlap: 2
+
+# Evaluation settings
+eval_k_values: [1, 5, 10] 

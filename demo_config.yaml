@@ -1,0 +1,39 @@
+# Demo Configuration - Clean and Simple
+# ====================================
+# Uses single 'demo/' folder - can be safely deleted/gitignored
+
+# Data settings - share raw data, separate processed
+data_dir: "demo"
+raw_data_dir: "data/raw"              # Share raw downloads with main project
+processed_data_dir: "demo/processed"  # Demo-specific processed data
+target_queries: 50
+target_rows: 500
+random_seed: 2025                      # Try different seed for different queries
+
+# Model settings
+model_name: "all-MiniLM-L6-v2"
+max_chars: 2000
+text_combination_strategy: "v1"
+
+# Embedding settings
+tfidf_max_features: 1000
+tfidf_ngram_range: [1, 2]
+
+# Vector database settings - under demo/
+vector_db_dir: "demo/vector_dbs"
+vector_db_name: "search_system"
+table_name: "products"
+
+# Search settings
+hybrid_alpha: 0.7
+hybrid_beta: 0.3
+keyword_threshold: 0.1
+keywords_type: "light"
+
+# Secondary ranking settings
+brand_boost: 0.1
+title_match_boost: 0.05
+min_title_overlap: 2
+
+# Evaluation settings
+eval_k_values: [1, 5, 10] 

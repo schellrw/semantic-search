@@ -38,3 +38,15 @@ def combine_product_text(row, max_chars=2000, use_imputation=False):
         combined = combined[:max_chars].rsplit(' ', 1)[0] + "..."
     
     return combined
+
+
+def create_combined_text_v1(row):
+    """Original strategy: title + description + brand + bullets + color"""
+    parts = [
+        str(row.get('product_title', '')),
+        str(row.get('product_description', '')),
+        str(row.get('product_brand', '')),
+        str(row.get('product_bullet_point', '')),
+        str(row.get('product_color', ''))
+    ]
+    return ' '.join([p for p in parts if p and p.lower() not in ['nan', 'none', '']])
