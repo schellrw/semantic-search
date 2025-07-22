@@ -9,6 +9,9 @@ old/
 # docs
 docs/
 
+# profile report (large html)
+profile_report/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
