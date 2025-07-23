@@ -40,13 +40,19 @@ def combine_product_text(row, max_chars=2000, use_imputation=False):
     return combined
 
 
-def create_combined_text_v1(row):
-    """Original strategy: title + description + brand + bullets + color"""
+def create_combined_text_v1(row, max_chars=None):
+    """Original strategy: title + description + bullets + brand + color"""
     parts = [
-        str(row.get('product_title', '')),
-        str(row.get('product_description', '')),
-        str(row.get('product_brand', '')),
-        str(row.get('product_bullet_point', '')),
-        str(row.get('product_color', ''))
+        simple_clean_text(row.get('product_title', '')),
+        simple_clean_text(row.get('product_description', '')),
+        simple_clean_text(row.get('product_bullet_point', '')),
+        simple_clean_text(row.get('product_brand', '')),
+        simple_clean_text(row.get('product_color', ''))
     ]
-    return ' '.join([p for p in parts if p and p.lower() not in ['nan', 'none', '']])
+    combined = ' | '.join([p for p in parts if p and p.lower() not in ['nan', 'none', '']])
+    
+    # Truncate if max_chars specified
+    if max_chars and len(combined) > max_chars:
+        combined = combined[:max_chars].rsplit(' ', 1)[0] + "..."
+    
+    return combined

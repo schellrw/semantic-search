@@ -43,7 +43,8 @@ def setup_data_pipeline(config, force_download=False):
     )
     
     print("Adding combined text field...")
-    final_df['combined_text_v1'] = final_df.apply(create_combined_text_v1, axis=1)
+    # final_df['combined_text_v1'] = final_df.apply(create_combined_text_v1, axis=1)
+    final_df['combined_text_v1'] = final_df.apply(lambda row: create_combined_text_v1(row, max_chars=2000), axis=1)
     
     # Show a sample of the queries to help debug
     print(f"\nSample queries in dataset:")
