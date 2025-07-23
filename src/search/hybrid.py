@@ -106,7 +106,12 @@ class HybridSearcher:
     
     def _search_vector_db(self, query, top_k):
         query_embedding = self.model.encode([query])[0]
-        semantic_results = self.table.search(query_embedding).distance_type("cosine").limit(top_k * 2).to_pandas()
+        search_query = self.table.search(query_embedding)
+
+        try:
+            semantic_results = search_query.distance_type("cosine").limit(top_k * 2).to_pandas() # allow for lancedb <=0.3.4
+        except AttributeError:
+            semantic_results = search_query.metric("cosine").limit(top_k * 2).to_pandas() # allow for lancedb >0.3.4
         
         hybrid_scores = []
         for idx, row in semantic_results.iterrows():
