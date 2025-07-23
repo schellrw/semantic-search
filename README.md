@@ -12,8 +12,10 @@ A production-ready semantic search system built for e-commerce product discovery
 
 ## 📊 Performance
 
-- **HITS@1**: 98.1% (hybrid) vs 96.2% (pure semantic)
-- **MRR**: 0.981 (hybrid) vs 0.972 (pure semantic)
+- **HITS@1**: 96.2% 
+- **HITS@5**: 98.1%
+- **HITS@10**: 98.1%
+- **MRR**: 0.972
 - **Dataset**: 519 products, 53 unique queries from Amazon ESCI
 
 ## 🏗️ Architecture
@@ -144,12 +146,11 @@ ranked_results = ranker.rank(results, query="coffee maker")
 ### Custom Text Processing
 
 ```python
-from src.text_processing import combine_product_text
+from src.text_processing.combining import create_combined_text_v1
 
-# Create combined text with custom strategy
-df['combined_text'] = df.apply(
-    lambda row: combine_product_text(row, max_chars=1500, use_imputation=True),
-    axis=1
+# Create combined text with baseline strategy
+df['combined_text_v1'] = df.apply(
+    lambda row: create_combined_text_v1(row, max_chars=2000), axis=1
 )
 ```
 
@@ -231,13 +232,6 @@ This project follows a systematic ML development approach:
 - **Decision**: No imputation needed
 - **Reason**: +0.000 improvement over baseline
 
-## 📊 Evaluation Results
-
-| Method | HITS@1 | HITS@5 | MRR |
-|--------|---------|---------|-----|
-| Pure Semantic | 0.962 | 0.981 | 0.972 |
-| Hybrid (Light) | **0.981** | **0.981** | **0.981** |
-| Hybrid (Moderate) | 0.981 | 0.981 | 0.981 |
 
 ## 🤝 Contributing
 
