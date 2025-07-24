@@ -12,11 +12,28 @@ A production-ready semantic search system built for e-commerce product discovery
 
 ## 📊 Performance
 
-- **HITS@1**: 96.2% 
-- **HITS@5**: 98.1%
-- **HITS@10**: 98.1%
-- **MRR**: 0.972
-- **Dataset**: 519 products, 53 unique queries from Amazon ESCI
+### Transformer Model Comparison
+
+Comprehensive evaluation of different transformer models and search strategies on 519 products, 53 unique queries from Amazon ESCI:
+
+| Approach | Model | Dims | HITS@1 | HITS@5 | HITS@10 | MRR | Speed (s/query) |
+|----------|-------|------|--------|--------|---------|-----|-----------------|
+| miniLM Semantic | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.025 |
+| miniLM Hybrid | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.046 |
+| mpnet Semantic | all-mpnet-base-v2 | 768 | 0.943 | 0.981 | 0.981 | 0.963 | ~0.046 |
+| mpnet Hybrid | all-mpnet-base-v2 | 768 | 1.000 | 1.000 | 1.000 | 1.000 | ~0.067 |
+
+**Key Findings:**
+- **mpnet Hybrid** achieves perfect scores across all metrics
+- **miniLM Semantic** offers the best speed/accuracy balance  
+- **Hybrid search** provides significant boost for mpnet (+0.057 HITS@1)
+- **miniLM approaches** show nearly identical accuracy, making semantic preferable for speed
+
+**Recommendations:**
+- **For speed + accuracy balance**: miniLM Semantic (simple, fast, effective)
+- **For maximum accuracy**: mpnet Hybrid (perfect scores, ~2.7x slower)
+
+*Results from `notebooks/06_transformer_comparison.ipynb` - run notebook to update with latest values*
 
 ## 🏗️ Architecture
 
@@ -213,6 +230,7 @@ This project follows a systematic ML development approach:
 3. **Embedding Comparison** (`03_embedding_comparison.ipynb`): TF-IDF vs transformers
 4. **Vector Database** (`04_vector_database.ipynb`): LanceDB implementation
 5. **Hybrid Search** (`05_hybrid_search.ipynb`): Final system with ranking
+6. **Transformer Comparison** (`06_transformer_comparison.ipynb`): miniLM vs mpnet evaluation
 
 ## 🎯 Key Technical Decisions
 

@@ -21,7 +21,7 @@ tfidf_ngram_range: [1, 2]
 
 # Vector database settings - DEMO SAFE NAMES
 vector_db_dir: "src/vector_databases"
-vector_db_name: "semantic_search_demo"  # no override "lancedb_hybrid_v1" 
+vector_db_name: "miniLM_semantic"  # no overwriting confirmed 
 table_name: "products"
 
 # Search settings
