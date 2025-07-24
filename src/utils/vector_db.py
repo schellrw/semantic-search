@@ -58,7 +58,7 @@ def create_embeddings_and_vector_db(
             "combined_text": row[text_column]
         })
     
-    # Create table (drop if exists)
+    # Create table (drop if exists for this legacy function)
     table_name = "products"
     if table_name in db.table_names():
         db.drop_table(table_name)
@@ -84,6 +84,33 @@ class VectorDatabaseManager:
         self.base_path = Path(base_path)
         self.active_connections = {}
     
+    def database_exists_with_data(self, db_name: str, table_name: str = "products") -> bool:
+        """
+        Check if database exists and has data in the specified table.
+        
+        Args:
+            db_name: Name of the database
+            table_name: Name of the table to check
+            
+        Returns:
+            True if database exists and has data, False otherwise
+        """
+        db_path = self.base_path / db_name
+        
+        if not db_path.exists():
+            return False
+        
+        try:
+            db = lancedb.connect(str(db_path))
+            if table_name not in db.table_names():
+                return False
+            
+            table = db.open_table(table_name)
+            return table.count_rows() > 0
+            
+        except Exception:
+            return False
+    
     def create_database(
         self,
         df: pd.DataFrame,
@@ -93,7 +120,7 @@ class VectorDatabaseManager:
         table_name: str = "products"
     ) -> Tuple[SentenceTransformer, lancedb.db.LanceDBConnection, Any]:
         """
-        Create a new vector database.
+        Create a new vector database only if it doesn't exist with data.
         
         Args:
             df: DataFrame with product data
@@ -105,6 +132,11 @@ class VectorDatabaseManager:
         Returns:
             Tuple of (model, db, table)
         """
+        # Check if database already exists with data
+        if self.database_exists_with_data(db_name, table_name):
+            print(f"Database '{db_name}' already exists with data. Use connect_to_database() instead.")
+            return self.connect_to_database(db_name, table_name, model_name)
+        
         print(f"Creating vector database: {db_name}")
         
         # Load transformer model
@@ -141,7 +173,7 @@ class VectorDatabaseManager:
             
             data.append(record)
         
-        # Create table (drop if exists)
+        # Only drop table if we're force-creating
         if table_name in db.table_names():
             db.drop_table(table_name)
         
@@ -165,7 +197,7 @@ class VectorDatabaseManager:
         model_name: str = "all-MiniLM-L6-v2"
     ) -> Tuple[SentenceTransformer, lancedb.db.LanceDBConnection, Any]:
         """
-        Connect to existing vector database.
+        Connect to existing vector database without recreating anything.
         
         Args:
             db_name: Name of the database
@@ -180,13 +212,17 @@ class VectorDatabaseManager:
         if not db_path.exists():
             raise FileNotFoundError(f"Database '{db_name}' not found at {db_path}")
         
-        print(f"Connecting to database: {db_name}")
+        print(f"Connecting to existing database: {db_name}")
         
-        # Load model
+        # Load model (don't create embeddings)
         model = SentenceTransformer(model_name)
         
-        # Connect to database
+        # Connect to existing database
         db = lancedb.connect(str(db_path))
+        
+        if table_name not in db.table_names():
+            raise ValueError(f"Table '{table_name}' not found in database '{db_name}'")
+        
         table = db.open_table(table_name)
         
         # Store connection
@@ -197,8 +233,37 @@ class VectorDatabaseManager:
             'model_name': model_name
         }
         
-        print(f"Connected to database '{db_name}' with {table.count_rows()} vectors")
+        print(f"Connected to database '{db_name}' with {table.count_rows()} existing vectors")
         return model, db, table
+    
+    def get_or_create_database(
+        self,
+        df: pd.DataFrame,
+        text_column: str,
+        db_name: str,
+        model_name: str = "all-MiniLM-L6-v2",
+        table_name: str = "products"
+    ) -> Tuple[SentenceTransformer, lancedb.db.LanceDBConnection, Any]:
+        """
+        Get existing database or create new one if it doesn't exist.
+        This is the preferred method for most use cases.
+        
+        Args:
+            df: DataFrame with product data (only used if creating new)
+            text_column: Column containing text to embed (only used if creating new)
+            db_name: Name of the database
+            model_name: Name of the transformer model
+            table_name: Name of the table
+            
+        Returns:
+            Tuple of (model, db, table)
+        """
+        if self.database_exists_with_data(db_name, table_name):
+            print(f"Using existing database: {db_name}")
+            return self.connect_to_database(db_name, table_name, model_name)
+        else:
+            print(f"Database '{db_name}' doesn't exist or has no data, creating new one")
+            return self.create_database(df, text_column, db_name, model_name, table_name)
     
     def list_databases(self) -> list:
         """List available databases."""
@@ -291,4 +356,48 @@ class VectorDatabaseManager:
     
     def get_active_connections(self) -> list:
         """Get list of active database connections."""
-        return list(self.active_connections.keys()) 
+        return list(self.active_connections.keys())
+    
+    def list_databases_with_info(self) -> Dict[str, Dict[str, Any]]:
+        """
+        List all databases with detailed information.
+        Useful for choosing which database to use.
+        
+        Returns:
+            Dictionary mapping database names to their info
+        """
+        databases = {}
+        
+        if not self.base_path.exists():
+            return databases
+        
+        for item in self.base_path.iterdir():
+            if item.is_dir() and (item / "_versions").exists():
+                try:
+                    info = self.get_database_info(item.name)
+                    databases[item.name] = info
+                except Exception as e:
+                    databases[item.name] = {'error': str(e)}
+        
+        return databases
+    
+    def print_available_databases(self) -> None:
+        """Print a user-friendly list of available databases."""
+        databases = self.list_databases_with_info()
+        
+        if not databases:
+            print("No vector databases found.")
+            return
+        
+        print("Available Vector Databases:")
+        print("-" * 50)
+        
+        for db_name, info in databases.items():
+            if 'error' in info:
+                print(f"❌ {db_name}: {info['error']}")
+            else:
+                num_vectors = info.get('num_vectors', 'unknown')
+                vector_dim = info.get('vector_dimension', 'unknown')
+                print(f"✅ {db_name}: {num_vectors} vectors, {vector_dim}D")
+        
+        print("-" * 50) 

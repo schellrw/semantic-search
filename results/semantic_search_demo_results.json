@@ -1,8 +1,8 @@
 {
   "config": {
-    "data_dir": "demo",
+    "data_dir": "data",
     "raw_data_dir": "data/raw",
-    "processed_data_dir": "demo/processed",
+    "processed_data_dir": "data/processed",
     "target_queries": 50,
     "target_rows": 500,
     "random_seed": 2025,
@@ -14,8 +14,8 @@
       1,
       2
     ],
-    "vector_db_dir": "demo/vector_dbs",
-    "vector_db_name": "search_system",
+    "vector_db_dir": "src/vector_databases",
+    "vector_db_name": "lancedb_hybrid_v1",
     "table_name": "products",
     "hybrid_alpha": 0.7,
     "hybrid_beta": 0.3,
@@ -31,10 +31,10 @@
     ]
   },
   "metrics": {
-    "hits_at_1": 0.9622641509433962,
+    "hits_at_1": 0.9811320754716981,
     "hits_at_5": 0.9811320754716981,
     "hits_at_10": 0.9811320754716981,
-    "mrr": 0.9716981132075472
+    "mrr": 0.9811320754716981
   },
   "dataset_info": {
     "num_rows": 519,

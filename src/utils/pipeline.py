@@ -67,24 +67,14 @@ def setup_embeddings_and_vector_db(df, config):
     
     db_manager = VectorDatabaseManager(config.vector_db_dir)
     
-    existing_dbs = db_manager.list_databases()
-    if config.vector_db_name in existing_dbs:
-        print(f"Vector database '{config.vector_db_name}' already exists")
-        print("Connecting to existing database...")
-        model, db, table = db_manager.connect_to_database(
-            config.vector_db_name,
-            config.table_name,
-            config.model_name
-        )
-    else:
-        print(f"Creating new vector database: {config.vector_db_name}")
-        model, db, table = db_manager.create_database(
-            df,
-            'combined_text_v1',
-            config.vector_db_name,
-            config.model_name,
-            config.table_name
-        )
+    # Use the improved method that properly handles existing databases
+    model, db, table = db_manager.get_or_create_database(
+        df,
+        'combined_text_v1',
+        config.vector_db_name,
+        config.model_name,
+        config.table_name
+    )
     
     return model, db, table, db_manager
 
