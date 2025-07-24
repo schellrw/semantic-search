@@ -7,8 +7,9 @@ from ..data.loader import download_esci_data, load_esci_data, filter_esci_data
 from ..data.sampling import create_sample_dataset
 from ..text_processing.combining import create_combined_text_v1
 from ..search.hybrid import HybridSearcher
+from ..search.semantic import SemanticSearcher
 from ..search.ranking import SecondaryRanker
-from .vector_db import VectorDatabaseManager
+from .vector_db import VectorDatabaseManager, infer_model_from_db_name
 
 
 def setup_data_pipeline(config, force_download=False):
@@ -67,44 +68,90 @@ def setup_embeddings_and_vector_db(df, config):
     
     db_manager = VectorDatabaseManager(config.vector_db_dir)
     
+    # Check if database exists to determine if we should infer model name
+    db_exists = db_manager.database_exists_with_data(config.vector_db_name, config.table_name)
+    
+    if db_exists:
+        # Database exists - infer the correct model name from database name
+        try:
+            inferred_model = infer_model_from_db_name(config.vector_db_name)
+            if inferred_model != config.model_name:
+                print(f"Auto-detected model mismatch:")
+                print(f"  Config model: {config.model_name}")
+                print(f"  Database requires: {inferred_model}")
+                print(f"  Using: {inferred_model} (auto-inferred)")
+                model_name_to_use = inferred_model
+            else:
+                model_name_to_use = config.model_name
+        except ValueError as e:
+            print(f"Warning: {e}")
+            print(f"Using config model name: {config.model_name}")
+            model_name_to_use = config.model_name
+    else:
+        # Database doesn't exist - use config model name
+        model_name_to_use = config.model_name
+    
     # Use the improved method that properly handles existing databases
     model, db, table = db_manager.get_or_create_database(
         df,
         'combined_text_v1',
         config.vector_db_name,
-        config.model_name,
+        model_name_to_use,
         config.table_name
     )
     
     return model, db, table, db_manager
 
 
-def setup_search_system(model, db, table, config):
-    """Set up the hybrid search system with secondary ranking"""
+def setup_search_system(model, db, table, config, semantic_only=False):
+    """Set up the search system with secondary ranking"""
     print("\n" + "=" * 60)
     print("STEP 3: SEARCH SYSTEM SETUP") 
     print("=" * 60)
     
-    keywords_path = config.get_keywords_path()
-    print(f"Loading keywords from {keywords_path}")
+    # Use the actual model name from the loaded model, not config
+    actual_model_name = model.get_sentence_embedding_dimension()
+    # Map dimensions back to model names for consistency
+    if actual_model_name == 384:
+        model_name_for_searcher = "all-MiniLM-L6-v2"
+    elif actual_model_name == 768:
+        model_name_for_searcher = "all-mpnet-base-v2"
+    else:
+        # Fallback to config model name
+        model_name_for_searcher = config.model_name
     
-    with open(keywords_path, 'r') as f:
-        keywords_dict = json.load(f)
-    
-    print(f"Loaded {len(keywords_dict)} keywords")
-    
-    hybrid_searcher = HybridSearcher(
-        model_name=config.model_name,
-        keywords_dict=keywords_dict,
-        alpha=config.hybrid_alpha,
-        beta=config.hybrid_beta,
-        keyword_threshold=config.keyword_threshold
-    )
-    
-    hybrid_searcher.db = db
-    hybrid_searcher.table = table
-    hybrid_searcher.model = model
-    hybrid_searcher.fitted = True
+    if semantic_only:
+        print("Using semantic-only search mode")
+        
+        searcher = SemanticSearcher(model_name=model_name_for_searcher)
+        searcher.db = db
+        searcher.table = table
+        searcher.model = model
+        searcher.fitted = True
+        
+    else:
+        print("Using hybrid search mode")
+        
+        keywords_path = config.get_keywords_path()
+        print(f"Loading keywords from {keywords_path}")
+        
+        with open(keywords_path, 'r') as f:
+            keywords_dict = json.load(f)
+        
+        print(f"Loaded {len(keywords_dict)} keywords")
+        
+        searcher = HybridSearcher(
+            model_name=model_name_for_searcher,
+            keywords_dict=keywords_dict,
+            alpha=config.hybrid_alpha,
+            beta=config.hybrid_beta,
+            keyword_threshold=config.keyword_threshold
+        )
+        
+        searcher.db = db
+        searcher.table = table
+        searcher.model = model
+        searcher.fitted = True
     
     secondary_ranker = SecondaryRanker(
         brand_boost=config.brand_boost,
@@ -113,10 +160,10 @@ def setup_search_system(model, db, table, config):
     )
     
     print("Search system ready!")
-    return hybrid_searcher, secondary_ranker
+    return searcher, secondary_ranker
 
 
-def run_evaluation(df, hybrid_searcher, config):
+def run_evaluation(df, searcher, config):
     """Run systematic evaluation"""
     print("\n" + "=" * 60)
     print("STEP 5: SYSTEM EVALUATION")
@@ -124,15 +171,15 @@ def run_evaluation(df, hybrid_searcher, config):
     
     from ..evaluation.metrics import evaluate_search_system
     
-    def eval_hybrid_search(query, df, *args, top_k=10):
-        return hybrid_searcher.search(query, top_k)
+    def eval_search(query, df, *args, top_k=10):
+        return searcher.search(query, top_k)
     
     print("Running systematic evaluation on all queries...")
     print(f"Evaluating {df['query'].nunique()} unique queries...")
     
     metrics = evaluate_search_system(
         df, 
-        eval_hybrid_search, 
+        eval_search, 
         k_values=config.eval_k_values
     )
     

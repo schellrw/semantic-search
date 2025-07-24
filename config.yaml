@@ -11,7 +11,7 @@ target_rows: 500
 random_seed: 2025
 
 # Model settings
-model_name: "all-MiniLM-L6-v2"
+model_name: "all-mpnet-base-v2" # "all-MiniLM-L6-v2" 
 max_chars: 2000
 text_combination_strategy: "v1"  # v1 (original), v2 (metadata first), v3 (bullets first)
 
@@ -21,7 +21,7 @@ tfidf_ngram_range: [1, 2]
 
 # Vector database settings - DEMO SAFE NAMES
 vector_db_dir: "src/vector_databases"
-vector_db_name: "miniLM_semantic"  # no overwriting confirmed 
+vector_db_name: "mpnet_base" # "miniLM_base"
 table_name: "products"
 
 # Search settings

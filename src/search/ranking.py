@@ -58,11 +58,14 @@ class SecondaryRanker:
         """Apply secondary ranking to search results"""
         results = search_results.copy()
         
+        # Get the dtype of the score column to ensure compatibility
+        score_dtype = results['score'].dtype
+        
         for brand_pref in self.preferred_brands:
             brand = brand_pref['brand']
             boost = brand_pref['boost']
             brand_mask = results['product_title'].str.contains(brand, case=False, na=False)
-            results.loc[brand_mask, 'score'] += boost
+            results.loc[brand_mask, 'score'] += score_dtype.type(boost)
         
         if query and len(results) > 0:
             query_words = set(query.lower().split())
@@ -71,13 +74,14 @@ class SecondaryRanker:
                 title_words = set(str(row.get('product_title', '')).lower().split())
                 overlap = len(query_words.intersection(title_words))
                 if overlap >= self.min_title_overlap:
-                    results.loc[idx, 'score'] += self.title_match_boost * overlap
+                    title_boost = score_dtype.type(self.title_match_boost * overlap)
+                    results.loc[idx, 'score'] += title_boost
         
         for rule in self.ranking_rules:
             for idx, row in results.iterrows():
                 if rule['condition'](row):
                     boost = rule['boost'](row)
-                    results.loc[idx, 'score'] += boost
+                    results.loc[idx, 'score'] += score_dtype.type(boost)
         
         results = results.sort_values('score', ascending=False).reset_index(drop=True)
         return results

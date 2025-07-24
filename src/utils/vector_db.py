@@ -9,6 +9,38 @@ from sentence_transformers import SentenceTransformer
 from typing import Tuple, Optional, Dict, Any
 
 
+def infer_model_from_db_name(db_name: str) -> str:
+    """
+    Infer the correct model name from database name to ensure dimension compatibility.
+    
+    Args:
+        db_name: Name of the vector database
+        
+    Returns:
+        Model name string
+        
+    Raises:
+        ValueError: If model cannot be inferred from database name
+    """
+    db_name_lower = db_name.lower()
+    
+    if 'minilm' in db_name_lower:
+        return "all-MiniLM-L6-v2"  # 384 dimensions
+    elif 'mpnet' in db_name_lower:
+        return "all-mpnet-base-v2"  # 768 dimensions
+    else:
+        # For unknown patterns, try to guess from common naming
+        if '384' in db_name_lower or 'mini' in db_name_lower:
+            return "all-MiniLM-L6-v2"
+        elif '768' in db_name_lower or 'large' in db_name_lower:
+            return "all-mpnet-base-v2" 
+        else:
+            raise ValueError(
+                f"Cannot infer model from database name: '{db_name}'. "
+                f"Expected names containing 'miniLM' or 'mpnet'"
+            )
+
+
 def create_embeddings_and_vector_db(
     df: pd.DataFrame, 
     text_column: str, 
