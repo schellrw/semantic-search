@@ -18,19 +18,19 @@ Comprehensive evaluation of different transformer models and search strategies o
 
 | Approach | Model | Dims | HITS@1 | HITS@5 | HITS@10 | MRR | Speed (s/query) |
 |----------|-------|------|--------|--------|---------|-----|-----------------|
-| miniLM Semantic | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.025 |
-| miniLM Hybrid | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.046 |
-| mpnet Semantic | all-mpnet-base-v2 | 768 | 0.943 | 0.981 | 0.981 | 0.963 | ~0.046 |
-| mpnet Hybrid | all-mpnet-base-v2 | 768 | 1.000 | 1.000 | 1.000 | 1.000 | ~0.067 |
+| miniLM Semantic | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.019 |
+| miniLM Hybrid | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.018 |
+| mpnet Semantic | all-mpnet-base-v2 | 768 | 0.943 | 0.981 | 1.000 | 0.962 | ~0.038 |
+| mpnet Hybrid | all-mpnet-base-v2 | 768 | 1.000 | 1.000 | 1.000 | 1.000 | ~0.039 |
 
 **Key Findings:**
 - **mpnet Hybrid** achieves perfect scores across all metrics
-- **miniLM Semantic** offers the best speed/accuracy balance  
+- **miniLM Semantic** offers the best speed/accuracy/simplicity balance  
 - **Hybrid search** provides significant boost for mpnet (+0.057 HITS@1)
-- **miniLM approaches** show nearly identical accuracy, making semantic preferable for speed
+- **miniLM approaches** show nearly identical accuracy and speed, making semantic preferable for speed
 
 **Recommendations:**
-- **For speed + accuracy balance**: miniLM Semantic (simple, fast, effective)
+- **For speed + accuracy + simplicity balance**: miniLM Semantic (simple, fast, effective)
 - **For maximum accuracy**: mpnet Hybrid (perfect scores, ~2.7x slower)
 
 *Results from `notebooks/06_transformer_comparison.ipynb` - run notebook to update with latest values*
