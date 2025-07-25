@@ -12,18 +12,20 @@ A production-ready semantic search system built for e-commerce product discovery
 
 ## 📊 Performance
 
-### Transformer Model Comparison
+### Transformer Model Comparison (with TFIDF baseline)
 
-Comprehensive evaluation of different transformer models and search strategies on 519 products, 53 unique queries from Amazon ESCI:
+Comprehensive evaluation of different models and search strategies on 519 products, 53 unique queries from Amazon ESCI:
 
 | Approach | Model | Dims | HITS@1 | HITS@5 | HITS@10 | MRR | Speed (s/query) |
 |----------|-------|------|--------|--------|---------|-----|-----------------|
+| TF-IDF Baseline | TfidfVectorizer | - | 0.849 | 0.906 | 0.943 | 0.869 | - |
 | miniLM Semantic | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.019 |
 | miniLM Hybrid | all-MiniLM-L6-v2 | 384 | 0.962 | 0.981 | 0.981 | 0.972 | ~0.018 |
 | mpnet Semantic | all-mpnet-base-v2 | 768 | 0.943 | 0.981 | 1.000 | 0.962 | ~0.038 |
 | mpnet Hybrid | all-mpnet-base-v2 | 768 | 1.000 | 1.000 | 1.000 | 1.000 | ~0.039 |
 
 **Key Findings:**
+- **Transformer models** significantly outperform TF-IDF baseline (+0.113 HITS@1 for miniLM)
 - **mpnet Hybrid** achieves perfect scores across all metrics
 - **miniLM Semantic** offers the best speed/accuracy/simplicity balance  
 - **Hybrid search** provides significant boost for mpnet (+0.057 HITS@1)
