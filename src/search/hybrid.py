@@ -56,6 +56,9 @@ class HybridSearcher:
         self.db = None
         self.table = None
         self.fitted = False
+        # Optional ANN tuning
+        self.refine_factor = None
+        self.ann_nprobes = None
     
     def fit_with_vector_db(self, vector_db_path, table_name="products", keywords_path=None):
         print(f"Loading hybrid searcher with {self.model_name}")
@@ -107,6 +110,18 @@ class HybridSearcher:
     def _search_vector_db(self, query, top_k):
         query_embedding = self.model.encode([query])[0]
         search_query = self.table.search(query_embedding)
+
+        # Optional ANN tuning if supported
+        if getattr(self, 'ann_nprobes', None):
+            try:
+                search_query = search_query.nprobes(self.ann_nprobes)
+            except Exception:
+                pass
+        if getattr(self, 'refine_factor', None):
+            try:
+                search_query = search_query.refine_factor(self.refine_factor)
+            except Exception:
+                pass
 
         try:
             semantic_results = search_query.distance_type("cosine").limit(top_k * 2).to_pandas() # allow for lancedb <=0.3.4

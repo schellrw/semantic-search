@@ -81,6 +81,8 @@ def main():
     parser.add_argument("--quick", action="store_true", help="Quick mode: smaller dataset (200 rows, 20 queries)")
     parser.add_argument("--seed", type=int, help="Random seed for data sampling (overrides config)")
     parser.add_argument("--no-hybrid", action="store_true", help="Use semantic-only search instead of hybrid search")
+    parser.add_argument("--refine-factor", type=int, help="Refinement factor for LanceDB ANN search (opt-in)")
+    parser.add_argument("--ann-nprobes", type=int, help="Number of IVF partitions to probe (opt-in)")
     
     args = parser.parse_args()
     
@@ -90,6 +92,12 @@ def main():
     if args.seed is not None:
         config.random_seed = args.seed
         print(f"Using random seed: {config.random_seed}")
+    if args.refine_factor is not None:
+        config.refine_factor = args.refine_factor
+        print(f"Using refine_factor: {config.refine_factor}")
+    if args.ann_nprobes is not None:
+        config.ann_nprobes = args.ann_nprobes
+        print(f"Using ann_nprobes: {config.ann_nprobes}")
     
     if args.quick:
         config.target_queries = 20

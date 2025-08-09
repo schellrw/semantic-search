@@ -128,6 +128,9 @@ def setup_search_system(model, db, table, config, semantic_only=False):
         searcher.table = table
         searcher.model = model
         searcher.fitted = True
+        # Optional ANN tuning
+        searcher.refine_factor = getattr(config, 'refine_factor', None)
+        searcher.ann_nprobes = getattr(config, 'ann_nprobes', None)
         
     else:
         print("Using hybrid search mode")
@@ -152,6 +155,9 @@ def setup_search_system(model, db, table, config, semantic_only=False):
         searcher.table = table
         searcher.model = model
         searcher.fitted = True
+        # Optional ANN tuning
+        searcher.refine_factor = getattr(config, 'refine_factor', None)
+        searcher.ann_nprobes = getattr(config, 'ann_nprobes', None)
     
     secondary_ranker = SecondaryRanker(
         brand_boost=config.brand_boost,

@@ -15,7 +15,7 @@
       2
     ],
     "vector_db_dir": "src/vector_databases",
-    "vector_db_name": "miniLM_base",
+    "vector_db_name": "mpnet_base",
     "table_name": "products",
     "hybrid_alpha": 0.7,
     "hybrid_beta": 0.3,
@@ -24,6 +24,8 @@
     "brand_boost": 0.1,
     "title_match_boost": 0.05,
     "min_title_overlap": 2,
+    "refine_factor": 3,
+    "ann_nprobes": null,
     "eval_k_values": [
       1,
       5,
@@ -31,10 +33,10 @@
     ]
   },
   "metrics": {
-    "hits_at_1": 0.9622641509433962,
-    "hits_at_5": 0.9811320754716981,
-    "hits_at_10": 0.9811320754716981,
-    "mrr": 0.9716981132075472
+    "hits_at_1": 1.0,
+    "hits_at_5": 1.0,
+    "hits_at_10": 1.0,
+    "mrr": 1.0
   },
   "dataset_info": {
     "num_rows": 519,

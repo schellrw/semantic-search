@@ -2,6 +2,7 @@ import os
 import json
 import yaml
 from dataclasses import dataclass, asdict
+from typing import Optional
 
 
 @dataclass
@@ -34,6 +35,10 @@ class SemanticSearchConfig:
     brand_boost: float = 0.1
     title_match_boost: float = 0.05
     min_title_overlap: int = 2
+    
+    # Optional ANN tuning (opt-in via CLI or config)
+    refine_factor: Optional[int] = None
+    ann_nprobes: Optional[int] = None
     
     eval_k_values: list = None
     

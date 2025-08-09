@@ -28,6 +28,9 @@ class SemanticSearcher:
         self.db = None
         self.table = None
         self.fitted = False
+        # Optional ANN tuning
+        self.refine_factor = None
+        self.ann_nprobes = None
     
     def fit(self, df: pd.DataFrame, text_column: str = 'combined_text_v1') -> 'SemanticSearcher':
         """
@@ -118,7 +121,22 @@ class SemanticSearcher:
         query_embedding = self.model.encode([query])[0]
         
         # Search vector database
-        results = self.table.search(query_embedding).distance_type("cosine").limit(top_k).to_pandas()
+        search_query = self.table.search(query_embedding)
+        # Optional ANN tuning if supported
+        if getattr(self, 'ann_nprobes', None):
+            try:
+                search_query = search_query.nprobes(self.ann_nprobes)
+            except Exception:
+                pass
+        if getattr(self, 'refine_factor', None):
+            try:
+                search_query = search_query.refine_factor(self.refine_factor)
+            except Exception:
+                pass
+        try:
+            results = search_query.distance_type("cosine").limit(top_k).to_pandas()
+        except AttributeError:
+            results = search_query.metric("cosine").limit(top_k).to_pandas()
         
         # Format results
         results['score'] = 1 - results['_distance']  # Convert distance to similarity
